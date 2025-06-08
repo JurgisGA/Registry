@@ -1,0 +1,46 @@
+name: CI
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: registry
+          POSTGRES_USER: registry
+          POSTGRES_PASSWORD: registry
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready" --health-interval=10s --health-timeout=5s --health-retries=5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: pdo_pgsql
+          tools: composer
+      - name: Install PHP dependencies
+        run: |
+          cd api
+          composer install --no-interaction --prefer-dist
+      - name: Run PHP tests
+        run: |
+          cd api
+          php artisan test --env=testing
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+      - name: Install JS dependencies and run tests
+        run: |
+          cd ui
+          corepack enable
+          pnpm install
+          pnpm run test --if-present
+      - name: Build Docker images
+        run: docker compose build

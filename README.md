@@ -44,3 +44,32 @@ docker compose exec api php artisan migrate
 # first-time frontend setup
 docker compose exec ui pnpm install
 docker compose exec ui pnpm run build
+```
+
+Open <http://localhost:5173> to view the SPA. The API runs on
+<http://localhost:8080>.
+
+## Repo Layout
+
+```
+.
+├─ api/                     # Laravel application
+├─ ui/                      # Vue 3 + Vite SPA
+├─ docker-compose.yml       # Local development stack
+├─ render.yaml              # Render Blueprint
+└─ .github/workflows/ci.yml # GitHub Actions
+```
+
+## Testing
+
+```bash
+# backend
+docker compose exec api php artisan test
+
+# frontend
+docker compose exec ui pnpm run test
+```
+
+## License
+
+MIT
