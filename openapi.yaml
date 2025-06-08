@@ -1,0 +1,28 @@
+openapi: 3.0.3
+info:
+  title: Dynamic Registry Builder API
+  version: 0.1.0
+paths:
+  /api/registries:
+    get:
+      summary: List registries
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Registry'
+components:
+  schemas:
+    Registry:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
