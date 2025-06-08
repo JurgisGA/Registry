@@ -2,12 +2,11 @@
 # render.yaml – Dynamic Registry Builder (Render IaaC)  #
 #########################################################
 
-# ───────────── 1. Web & Static services ───────────────
+# ─────────── 1. Web services (Laravel API) ────────────
 services:
-  # ── Laravel API ──────────────────────────────────────
   - type: web
     name: registry-api
-    env: php              # 👈  use “env: php”
+    runtime: php          # ✔ allowed runtime value
     plan: free
 
     buildCommand: |
@@ -21,20 +20,19 @@ services:
       - key: APP_ENV
         value: production
 
-      # generate a random APP_KEY the first time
+      # Generate a random APP_KEY on first build
       - key: APP_KEY
         generateValue: true
 
-      # add the connection string from the database declared below
+      # Inject DB connection string
       - key: DATABASE_URL
         fromDatabase:
           name: registry-db
           property: connectionString
 
-  # ── Vue + Vuetify SPA (static site) ──────────────────
-  - type: web
-    name: registry-ui
-    env: static           # 👈  “env: static” for static sites
+# ───────────── 2. Static site (Vue + Vuetify SPA) ─────
+staticSites:
+  - name: registry-ui
     plan: free
 
     buildCommand: |
@@ -46,17 +44,17 @@ services:
 
     envVars:
       - key: VITE_API_BASE_URL
-        value: https://registry-api.onrender.com  # update if API name changes
+        value: https://registry-api.onrender.com   # update if API name changes
 
-    # SPA fallback so all unknown routes serve index.html
+    # SPA fallback
     routes:
       - type: rewrite
         source: /*
         destination: /index.html
 
-# ───────────── 2. PostgreSQL database ─────────────────
+# ───────────── 3. PostgreSQL database ─────────────────
 databases:
   - name: registry-db
-    databaseName: registry      # Render may suffix this automatically
     plan: free
-    ipAllowList: []             # empty list = allow internal services
+    databaseName: registry          # Render may suffix it
+    ipAllowList: []                 # allow internal connections
