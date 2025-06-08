@@ -1,0 +1,49 @@
+services:
+  # ───────────────────────────────────────────────────────────────
+  - type: postgres
+    name: registry-db
+    plan: free
+    ipAllowList: []        # all services in the same account can connect
+    properties:
+      dbName: registry
+
+  # ───────────────────────────────────────────────────────────────
+  - type: web
+    name: registry-api
+    env: php
+    plan: free
+    buildCommand: |
+      composer install --prefer-dist --no-dev -q -o
+      php artisan key:generate --force
+      php artisan migrate --force
+    startCommand: php artisan serve --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_KEY                     # filled by `key:generate` above
+        generateValue: true
+      - key: DATABASE_URL                # provided by the DB service
+        fromDatabase:
+          name: registry-db
+          property: connectionString
+
+  # ───────────────────────────────────────────────────────────────
+  - type: static
+    name: registry-ui
+    buildCommand: |
+      cd ui
+      pnpm install
+      pnpm run build
+    staticPublishPath: ui/dist
+    envVars:
+      - key: VITE_API_BASE_URL
+        value: https://registry-api.onrender.com
+    headers:
+      - source: /*
+        headers:
+          - "Cache-Control: public, max-age=31536000, immutable"
+    routes:
+      # SPA fallback – always serve index.html
+      - type: rewrite
+        source: /*
+        destination: /index.html
