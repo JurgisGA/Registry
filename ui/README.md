@@ -1,5 +1,18 @@
-# Vue 3 + Vite
+# Registry UI
 
-This template should help get you started developing with Vue 3 in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+This directory contains the Vue 3 + Vuetify single page application for the Dynamic Registry Builder.
 
-Learn more about IDE Support for Vue in the [Vue Docs Scaling up Guide](https://vuejs.org/guide/scaling-up/tooling.html#ide-support).
+## Quick start
+
+```bash
+pnpm install
+pnpm run dev
+```
+
+The app expects `VITE_API_BASE_URL` to be set, pointing to the Laravel API. In the Docker setup this is provided automatically.
+
+Run unit tests with:
+
+```bash
+pnpm run test
+```
