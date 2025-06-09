@@ -1,57 +1,55 @@
 #########################################################
-# render.yaml – Dynamic Registry Builder (Render IaaC)  #
+# render.yaml – Dynamic Registry Builder                #
+# Works with: 2024-06 Render Blueprint spec             #
 #########################################################
 
 services:
-  # ────────────────── Laravel API (PHP) ─────────────────
+  # ─────── Laravel API (Docker) ────────────────────────
   - type: web
     name: registry-api
-    env: php              # web service running PHP
-    plan: free
-
-    buildCommand: |
-      composer install --prefer-dist --no-dev -q -o
-      php artisan key:generate --force
-      php artisan migrate --force
-
-    startCommand: php artisan serve --host 0.0.0.0 --port $PORT
+    runtime: docker          # ← PHP via Docker
+    plan: free               # Free “Web Service” plan
+    rootDir: api             # Dockerfile lives in ./api/Dockerfile
+    dockerfilePath: Dockerfile   # (relative to rootDir)
 
     envVars:
       - key: APP_ENV
         value: production
+
+      # Generate once at first build
       - key: APP_KEY
         generateValue: true
+
+      # Pull DATABASE_URL from the Postgres instance below
       - key: DATABASE_URL
         fromDatabase:
           name: registry-db
           property: connectionString
 
-  # ──────────────── Vue + Vuetify SPA (Static) ─────────
+  # ─────── Vue + Vuetify SPA (static site) ─────────────
   - type: web
     name: registry-ui
-    env: static           # ← tell Render this is a static-site build
-    plan: free
-
+    env: static             # static-site build pipeline
     buildCommand: |
       cd ui
       pnpm install
       pnpm run build
+    staticPublishPath: ui/dist   # what Vite outputs
 
-    staticPublishPath: ui/dist
+    # No “plan” field on static sites
 
     envVars:
       - key: VITE_API_BASE_URL
-        value: https://registry-api.onrender.com   # adjust if API name changes
+        value: https://registry-api.onrender.com   # update if API name changes
 
-    # SPA fallback: any unknown route → index.html
-    routes:
+    routes:                     # SPA fallback
       - type: rewrite
         source: /*
         destination: /index.html
 
-# ───────────────── PostgreSQL (Free) ───────────────────
+# ─────── Managed Postgres (free) ───────────────────────
 databases:
   - name: registry-db
     plan: free
-    databaseName: registry       # Render appends a suffix automatically
-    ipAllowList: []              # allow internal connections only
+    databaseName: registry        # Render appends a suffix automatically
+    ipAllowList: []               # internal connections only
