@@ -6,7 +6,7 @@ services:
   # ────────────────── Laravel API (PHP) ─────────────────
   - type: web
     name: registry-api
-    runtime: php            # official runtime key for web services
+    env: php              # web service running PHP
     plan: free
 
     buildCommand: |
@@ -19,18 +19,17 @@ services:
     envVars:
       - key: APP_ENV
         value: production
-
-      - key: APP_KEY           # generated the first time the service builds
+      - key: APP_KEY
         generateValue: true
-
-      - key: DATABASE_URL      # injected from the database defined below
+      - key: DATABASE_URL
         fromDatabase:
           name: registry-db
           property: connectionString
 
   # ──────────────── Vue + Vuetify SPA (Static) ─────────
-  - type: static               # <-- THIS tells Render it’s a static site
+  - type: web
     name: registry-ui
+    env: static           # ← tell Render this is a static-site build
     plan: free
 
     buildCommand: |
@@ -44,7 +43,7 @@ services:
       - key: VITE_API_BASE_URL
         value: https://registry-api.onrender.com   # adjust if API name changes
 
-    # SPA fallback – all unknown routes serve index.html
+    # SPA fallback: any unknown route → index.html
     routes:
       - type: rewrite
         source: /*
@@ -54,5 +53,5 @@ services:
 databases:
   - name: registry-db
     plan: free
-    databaseName: registry           # Render will suffix this automatically
-    ipAllowList: []                  # allow internal connections
+    databaseName: registry       # Render appends a suffix automatically
+    ipAllowList: []              # allow internal connections only
